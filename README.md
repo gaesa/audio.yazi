@@ -19,9 +19,10 @@ git clone https://github.com/Sonico98/exifaudio.yazi.git %AppData%\yazi\config\p
 Add this to your `yazi.toml`:
 
 ```toml
-[[plugin.prepend_previewers]]
-mime = "audio/*"
-exec = "exifaudio"
+[plugin]
+prepend_previewers = [
+    { mime = "audio/*", run = "exifaudio" },
+]
 ```
 
 Make sure you have [exiftool](https://exiftool.org/) installed and in your `PATH`.
