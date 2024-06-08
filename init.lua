@@ -95,36 +95,54 @@ function M:peek()
             end
         end
 
-        local metadata = get_metadata()
-        if metadata == nil then
-            return false
+        ya.preview_widgets(self, { ui.Paragraph(self.area, get_metadata()):wrap(ui.Paragraph.WRAP) })
+    end
+
+    local function has_cover()
+        local child1 = -- `mediainfo` is much faster than `exiftool` in this case
+            Command("mediainfo"):arg(tostring(self.file.url)):stdout(Command.PIPED):stderr(Command.NULL):spawn()
+        if child1 ~= nil then
+            local child2 = Command("rg")
+                :args({ "Cover", "-m=1" })
+                :stdin(child1:take_stdout())
+                :stdout(Command.NULL)
+                :stderr(Command.NULL)
+                :spawn()
+            if child2 ~= nil then
+                local status = child2:wait()
+                if status ~= nil then
+                    return status.success
+                else
+                    return false
+                end
+            else
+                return false
+            end
         else
-            ya.preview_widgets(self, { ui.Paragraph(self.area, metadata):wrap(ui.Paragraph.WRAP) })
-            return true
+            return false
         end
     end
 
     local function show_cover()
-        local cover_width = self.area.w / 2 - 5
-        local cover_height = (self.area.h / 4) + 3
+        local cover_width = self.area.w
+        local cover_height = self.area.h
 
-        local bottom_right = ui.Rect({
-            x = self.area.right - cover_width,
-            y = self.area.bottom - cover_height,
+        local top_left = ui.Rect({
+            x = self.area.left,
+            y = self.area.top,
             w = cover_width,
             h = cover_height,
         })
 
         if self:preload() == 1 then
-            ya.image_show(cache, bottom_right)
+            ya.image_show(cache, top_left)
         end
     end
 
-    local continue = show_metadata()
-    if continue then
+    if has_cover() then
         show_cover()
     else
-        return
+        show_metadata()
     end
 end
 
