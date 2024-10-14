@@ -95,7 +95,7 @@ function M:peek()
             end
         end
 
-        ya.preview_widgets(self, { ui.Paragraph(self.area, get_metadata()):wrap(ui.Paragraph.WRAP) })
+        ya.preview_widgets(self, { ui.Text(get_metadata()):area(self.area):wrap(ui.Text.WRAP) })
     end
 
     local function has_cover()
