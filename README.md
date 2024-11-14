@@ -14,6 +14,14 @@ Ensure that you have [MediaInfo](https://mediaarea.net/en/MediaInfo/Download) an
 
 ## Installation
 
+Automatically:
+
+```
+ya pack -a "gaesa/audio"
+```
+
+Or manually:
+
 ```sh
 # Linux/macOS
 git clone https://github.com/gaesa/audio.yazi.git ~/.config/yazi/plugins/audio.yazi
