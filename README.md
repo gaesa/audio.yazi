@@ -10,7 +10,7 @@ Preview audio cover and fallback to metadata on [Yazi](https://github.com/sxyazi
 
 ## Requirements
 
-Make sure you have [exiftool](https://exiftool.org/), [mediainfo](https://mediaarea.net/en/MediaInfo/Download), [ripgrep](https://github.com/BurntSushi/ripgrep/releases) installed and in your `PATH`.
+Ensure that you have [MediaInfo](https://mediaarea.net/en/MediaInfo/Download) and [FFmpeg](https://github.com/FFmpeg/FFmpeg) (used for cover detection and extraction) installed and available in your system's `PATH`.
 
 ## Installation
 
