@@ -2,7 +2,7 @@ local M = {}
 
 function M:peek()
     local cache = ya.file_cache(self)
-    if not cache then
+    if cache == nil then
         return
     end
 
