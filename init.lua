@@ -7,69 +7,21 @@ function M:peek()
     end
 
     local function prettify(metadata)
-        local substitutions = {
-            Sortname = "Sort Title:",
-            SortName = "Sort Title:",
-            TitleSort = "Sort Title:",
-            TitleSortOrder = "Sort Title:",
-            ArtistSort = "Sort Artist:",
-            SortArtist = "Sort Artist:",
-            Artist = "Artist:",
-            ARTIST = "Artist:",
-            PerformerSortOrder = "Sort Artist:",
-            SortAlbumArtist = "Sort Album Artist:",
-            AlbumArtistSortOrder = "Sort Album Artist:",
-            AlbumArtistSort = "Sort Album Artist:",
-            AlbumSortOrder = "Sort Album:",
-            AlbumSort = "Sort Album:",
-            SortAlbum = "Sort Album:",
-            Album = "Album:",
-            ALBUM = "Album:",
-            AlbumArtist = "Album Artist:",
-            Genre = "Genre:",
-            GENRE = "Genre:",
-            TrackNumber = "Track Number:",
-            Year = "Year:",
-            Duration = "Duration:",
-            AudioBitrate = "Bitrate:",
-            AvgBitrate = "Average Bitrate:",
-            AudioSampleRate = "Sample Rate:",
-            SampleRate = "Sample Rate:",
-            AudioChannels = "Channels:",
-        }
-
-        for k, v in pairs(substitutions) do
-            metadata = metadata:gsub(tostring(k) .. ":", v, 1)
+        local key, value = metadata:match("(.-):%s*(.*)")
+        if key == nil or value == nil then
+            return ui.Span("")
+        else
+            return ui.Line({ ui.Span(key):bold(), ui.Span(": "), ui.Span(value) })
         end
-
-        -- Separate the tag title from the tag data
-        local t = {}
-        for str in string.gmatch(metadata, "([^" .. ":" .. "]+)") do
-            table.insert(t, str)
-        end
-
-        -- Add back semicolon to title, rejoin tag data if it happened to contain a semicolon
-        return t[1] .. ":", table.concat(t, ":", 2)
     end
 
     local function show_metadata()
-        -- stylua: ignore
-        local child = Command("exiftool")
-            :args({
-                "-q", "-q", "-S", "-Title", "-SortName",
-                "-TitleSort", "-TitleSortOrder", "-Artist",
-                "-SortArtist", "-ArtistSort", "-PerformerSortOrder",
-                "-Album", "-SortAlbum", "-AlbumSort", "-AlbumSortOrder",
-                "-AlbumArtist", "-SortAlbumArtist", "-AlbumArtistSort",
-                "-AlbumArtistSortOrder", "-Genre", "-TrackNumber",
-                "-Year", "-Duration", "-SampleRate",
-                "-AudioSampleRate", "-AudioBitrate", "-AvgBitrate",
-                "-Channels", "-AudioChannels", tostring(self.file.url),
-            })
+        local child = Command("mediainfo")
+            :arg("--")
+            :arg(tostring(self.file.url))
             :stdout(Command.PIPED)
             :stderr(Command.NULL)
             :spawn()
-
         local function get_metadata()
             local limit = self.area.h + self.skip
             local i, metadata = 0, {}
@@ -79,11 +31,7 @@ function M:peek()
                     if event == 0 then
                         i = i + 1
                         if i > self.skip then
-                            local m_title, m_tag = prettify(next)
-                            local ti = ui.Span(m_title):bold()
-                            local ta = ui.Span(m_tag)
-                            table.insert(metadata, ui.Line({ ti, ta }))
-                            table.insert(metadata, ui.Line({}))
+                            table.insert(metadata, prettify(next))
                         end
                     else
                         return metadata
@@ -99,8 +47,12 @@ function M:peek()
     end
 
     local function has_cover()
-        local child1 = -- `mediainfo` is much faster than `exiftool` in this case
-            Command("mediainfo"):arg(tostring(self.file.url)):stdout(Command.PIPED):stderr(Command.NULL):spawn()
+        local child1 = Command("mediainfo")
+            :arg("--")
+            :arg(tostring(self.file.url))
+            :stdout(Command.PIPED)
+            :stderr(Command.NULL)
+            :spawn()
         if child1 ~= nil then
             local child2 = Command("rg")
                 :args({ "Cover", "-m=1" })
@@ -158,24 +110,38 @@ end
 
 function M:preload()
     local cache = ya.file_cache(self)
-    if not cache or fs.cha(cache) then
-        return 1
+    if cache == nil then -- not allowd to be cached
+        return tonumber("01", 2) -- don't continue, success
+    end
+    local cha = select(1, fs.cha(cache))
+    if cha ~= nil and cha.len > 1 then -- cache already exits
+        return tonumber("01", 2)
     end
 
-    local output = Command("exiftool")
-        :args({ "-b", "-CoverArt", "-Picture", tostring(self.file.url) })
-        :stdout(Command.PIPED)
-        :stderr(Command.PIPED)
-        :output()
+    local status, code = Command("ffmpeg"):args({
+        "-v",
+        "error",
+        "-i",
+        tostring(self.file.url),
+        "-an",
+        "-vcodec",
+        "copy",
+        "-frames:v",
+        "1",
+        "-f",
+        "image2",
+        "-y",
+        tostring(cache),
+    }):status()
 
-    if output == nil then
-        return 0
+    if status == nil then -- `ffmpeg` executable not found
+        ya.err("`ffmpeg` command returns " .. tostring(code))
+        return tonumber("00", 2)
     else
-        local successful = fs.write(cache, output.stdout)
-        if successful then
-            return 1
-        else
-            return 2
+        if status.success then
+            return tonumber("01", 2)
+        else -- decoding error or save error
+            return tonumber("10", 2)
         end
     end
 end
