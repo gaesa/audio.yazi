@@ -28,8 +28,14 @@ Add this to your `yazi.toml`:
 
 ```toml
 [plugin]
+prepend_preloaders = [
+    { mime = "audio/*", run = "audio" },
+    { name = "*.m4a", run = "audio" },
+]
+
 prepend_previewers = [
     { mime = "audio/*", run = "audio" },
+    { name = "*.m4a", run = "audio" },
 ]
 ```
 
