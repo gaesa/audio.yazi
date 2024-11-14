@@ -76,18 +76,8 @@ function M:peek()
     end
 
     local function show_cover()
-        local cover_width = self.area.w
-        local cover_height = self.area.h
-
-        local top_left = ui.Rect({
-            x = self.area.left,
-            y = self.area.top,
-            w = cover_width,
-            h = cover_height,
-        })
-
         if self:preload() == 1 then
-            ya.image_show(cache, top_left)
+            ya.image_show(cache, self.area)
         end
     end
 
