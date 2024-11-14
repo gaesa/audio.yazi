@@ -7,13 +7,13 @@ function M:peek()
     end
 
     local function show_metadata()
-        local child = Command("mediainfo")
-            :arg("--")
-            :arg(tostring(self.file.url))
-            :stdout(Command.PIPED)
-            :stderr(Command.NULL)
-            :spawn()
         local function get_metadata()
+            local child = Command("mediainfo")
+                :arg("--")
+                :arg(tostring(self.file.url))
+                :stdout(Command.PIPED)
+                :stderr(Command.NULL)
+                :spawn()
             local limit = self.area.h + self.skip
             local i, metadata = 0, {}
             if child ~= nil then
@@ -24,14 +24,10 @@ function M:peek()
                         if i > self.skip then
                             table.insert(metadata, next)
                         end
-                    else
-                        return metadata
                     end
                 end
-                return metadata
-            else
-                return metadata
             end
+            return metadata
         end
 
         ya.preview_widgets(self, { ui.Text(get_metadata()):area(self.area):wrap(ui.Text.WRAP) })
