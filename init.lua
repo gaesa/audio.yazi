@@ -33,6 +33,10 @@ function M:peek()
         ya.preview_widgets(self, { ui.Text(get_metadata()):area(self.area):wrap(ui.Text.WRAP) })
     end
 
+    local function display_error(error)
+        ya.preview_widgets(self, { ui.Text(ui.Line({ ui.Span(error) })):area(self.area):wrap(ui.Text.WRAP) })
+    end
+
     local function has_cover()
         local output, _ = Command("ffprobe")
             :args({
@@ -47,9 +51,20 @@ function M:peek()
             })
             :arg(tostring(self.file.url))
             :stdout(Command.PIPED)
-            :stderr(Command.NULL)
+            :stderr(Command.PIPED)
             :output()
-        return output ~= nil and output.status.success and output.stdout ~= ""
+
+        if output ~= nil then
+            if output.status.success and output.stdout ~= "" then
+                return true
+            else
+                display_error(output.stderr)
+                return false
+            end
+        else
+            display_error("Make sure `ffmpeg` is installed and in your PATH")
+            return false
+        end
     end
 
     local function show_cover()
