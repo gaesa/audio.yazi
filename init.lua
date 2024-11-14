@@ -8,7 +8,7 @@ function M:peek()
 
     local function show_metadata()
         local function get_metadata()
-            local child = Command("mediainfo")
+            local child, _ = Command("mediainfo")
                 :arg("--")
                 :arg(tostring(self.file.url))
                 :stdout(Command.PIPED)
