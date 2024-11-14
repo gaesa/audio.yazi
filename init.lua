@@ -6,15 +6,6 @@ function M:peek()
         return
     end
 
-    local function prettify(metadata)
-        local key, value = metadata:match("(.-):%s*(.*)")
-        if key == nil or value == nil then
-            return ui.Span("")
-        else
-            return ui.Line({ ui.Span(key):bold(), ui.Span(": "), ui.Span(value) })
-        end
-    end
-
     local function show_metadata()
         local child = Command("mediainfo")
             :arg("--")
@@ -31,7 +22,7 @@ function M:peek()
                     if event == 0 then
                         i = i + 1
                         if i > self.skip then
-                            table.insert(metadata, prettify(next))
+                            table.insert(metadata, next)
                         end
                     else
                         return metadata
