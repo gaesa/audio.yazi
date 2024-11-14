@@ -112,7 +112,8 @@ function M:preload()
         if status.success then
             return tonumber("01", 2)
         else -- decoding error or save error
-            return tonumber("10", 2)
+            -- return tonumber("10", 2)
+            return tonumber("11", 2) -- suppress errors
         end
     end
 end
