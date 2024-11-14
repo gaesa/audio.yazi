@@ -38,32 +38,22 @@ function M:peek()
     end
 
     local function has_cover()
-        local child1 = Command("mediainfo")
-            :arg("--")
+        local output, _ = Command("ffprobe")
+            :args({
+                "-v",
+                "error",
+                "-select_streams",
+                "v:0",
+                "-show_entries",
+                "stream=codec_type",
+                "-of",
+                "default=noprint_wrappers=1:nokey=1",
+            })
             :arg(tostring(self.file.url))
             :stdout(Command.PIPED)
             :stderr(Command.NULL)
-            :spawn()
-        if child1 ~= nil then
-            local child2 = Command("rg")
-                :args({ "Cover", "-m=1" })
-                :stdin(child1:take_stdout())
-                :stdout(Command.NULL)
-                :stderr(Command.NULL)
-                :spawn()
-            if child2 ~= nil then
-                local status = child2:wait()
-                if status ~= nil then
-                    return status.success
-                else
-                    return false
-                end
-            else
-                return false
-            end
-        else
-            return false
-        end
+            :output()
+        return output ~= nil and output.status.success and output.stdout ~= ""
     end
 
     local function show_cover()
