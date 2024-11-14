@@ -57,7 +57,7 @@ function M:peek()
     end
 
     local function show_cover()
-        if self:preload() == 1 then
+        if self:preload() == tonumber("01", 2) then
             ya.image_show(cache, self.area)
         end
     end
