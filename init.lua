@@ -102,18 +102,37 @@ function M:preload()
         return tonumber("01", 2)
     end
 
+    -- Assumption: `num` is always non-negative
+    local function round(num)
+        return math.floor(num + 0.5)
+    end
+
+    -- Map `image_quality` from range [1, 100] to FFmpeg's `-q:v` range [2, 31]
+    -- Assumption: `image_quality` is in the range [1, 100]
+    -- See also:
+    -- https://docs.rs/image/latest/image/codecs/jpeg/struct.JpegEncoder.html#method.new_with_quality
+    -- https://ffmpeg.org/ffmpeg-codecs.html#toc-Codec-Options
+    -- https://stackoverflow.com/questions/32147805/ffmpeg-generate-higher-quality-images-for-mjpeg-encoding
+    local function map_quality_to_qv(image_quality)
+        local k = -29 / 99
+        local b = 31 - k
+        return math.min(31, math.max(2, round(k * image_quality + b)))
+    end
+
     local status, code = Command("ffmpeg"):args({
         "-v",
         "error",
         "-i",
         tostring(self.file.url),
         "-an",
-        "-vcodec",
-        "copy",
+        "-c:v",
+        "mjpeg",
         "-frames:v",
         "1",
         "-f",
         "image2",
+        "-q:v",
+        tostring(map_quality_to_qv(PREVIEW.image_quality)),
         "-y",
         tostring(cache),
     }):status()
