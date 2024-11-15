@@ -1,7 +1,7 @@
 local M = {}
 
 function M:peek()
-    local cache = ya.file_cache(self)
+    local start, cache = os.clock(), ya.file_cache(self)
     if cache == nil then
         return
     end
@@ -69,6 +69,7 @@ function M:peek()
 
     local function show_cover()
         if self:preload() == tonumber("01", 2) then
+            ya.sleep(math.max(0, PREVIEW.image_delay / 1000 + start - os.clock()))
             ya.image_show(cache, self.area)
             ya.preview_widgets(self, {})
         end
