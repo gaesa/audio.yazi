@@ -125,6 +125,8 @@ function M:preload()
         "-i",
         tostring(self.file.url),
         "-an",
+        "-frames:v",
+        "1",
         "-vf",
         -- See also:
         -- https://trac.ffmpeg.org/wiki/Scaling
@@ -132,14 +134,10 @@ function M:preload()
         "scale='-1:min("
             .. tostring(PREVIEW.max_height)
             .. ",ih)'",
-        "-c:v",
-        "mjpeg",
-        "-frames:v",
-        "1",
-        "-f",
-        "image2",
         "-q:v",
         tostring(map_quality_to_qv(PREVIEW.image_quality)),
+        "-f",
+        "image2",
         "-y",
         tostring(cache),
     }):status()
