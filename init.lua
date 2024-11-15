@@ -125,6 +125,13 @@ function M:preload()
         "-i",
         tostring(self.file.url),
         "-an",
+        "-vf",
+        -- See also:
+        -- https://trac.ffmpeg.org/wiki/Scaling
+        -- https://superuser.com/questions/566998/how-can-i-fit-a-video-to-a-certain-size-but-dont-upscale-it-with-ffmpeg
+        "scale='-1:min("
+            .. tostring(PREVIEW.max_height)
+            .. ",ih)'",
         "-c:v",
         "mjpeg",
         "-frames:v",
