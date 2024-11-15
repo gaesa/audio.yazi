@@ -62,7 +62,7 @@ function M:peek()
                 return false
             end
         else
-            display_error("Make sure `ffmpeg` is installed and in your PATH")
+            display_error("Make sure `ffprobe` (part of the `ffmpeg` suite) is installed and in your PATH.")
             return false
         end
     end
