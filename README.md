@@ -10,7 +10,10 @@ Preview audio cover and fallback to metadata on [Yazi](https://github.com/sxyazi
 
 ## Requirements
 
-Ensure that you have [MediaInfo](https://mediaarea.net/en/MediaInfo/Download) and [FFmpeg](https://github.com/FFmpeg/FFmpeg) (used for cover detection and extraction) installed and available in your system's `PATH`.
+Ensure that you have the following installed and available in your system's `PATH`:
+
+- [MediaInfo](https://mediaarea.net/en/MediaInfo/Download)
+- [FFmpeg](https://ffmpeg.org/download.html) (used for cover detection via `ffprobe` and cover extraction via `ffmpeg`)
 
 ## Installation
 
