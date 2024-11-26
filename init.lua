@@ -24,6 +24,8 @@ function M:peek()
                         if i > self.skip then
                             table.insert(metadata, next)
                         end
+                    else
+                        return metadata
                     end
                 end
             end
