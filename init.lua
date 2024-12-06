@@ -4,6 +4,7 @@ local function display_error(job, error)
     ya.preview_widgets(job, { ui.Text(ui.Line({ ui.Span(error) })):area(job.area):wrap(ui.Text.WRAP) })
 end
 
+-- TODO: speed up this
 local function has_cover(job)
     local output, _ = Command("ffprobe")
         :args({
@@ -121,6 +122,10 @@ function M:preload(job)
         return math.min(31, math.max(2, round(k * image_quality + b)))
     end
 
+    if not has_cover(job) then
+        return tonumber("01", 2)
+    end
+
     local status, code = Command("ffmpeg"):args({
         "-v",
         "error",
@@ -150,9 +155,8 @@ function M:preload(job)
     else
         if status.success then
             return tonumber("01", 2)
-        else -- decoding error or save error
-            -- return tonumber("10", 2)
-            return tonumber("11", 2) -- suppress errors
+        else -- decoding/saving error
+            return tonumber("10", 2)
         end
     end
 end
