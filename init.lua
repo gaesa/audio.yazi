@@ -4,27 +4,21 @@ local function display_error(job, error)
     ya.preview_widgets(job, { ui.Text(ui.Line({ ui.Span(error) })):area(job.area):wrap(ui.Text.WRAP) })
 end
 
--- TODO: speed up this
 local function has_cover(job)
-    local output, _ = Command("ffprobe")
+    -- Currently, no method has been found to make `ffprobe` faster than `mediainfo`
+    local output, _ = Command("mediainfo")
         :args({
-            "-v",
-            "error",
-            "-select_streams",
-            "v:0",
-            "-show_entries",
-            "stream=codec_type",
-            "-of",
-            "default=noprint_wrappers=1:nokey=1",
+            "--Output=General;%Cover%",
+            "--",
+            tostring(job.file.url),
         })
-        :arg(tostring(job.file.url))
         :stdout(Command.PIPED)
         :stderr(Command.PIPED)
         :output()
 
     if output ~= nil then
-        if output.status.success and output.stdout ~= "" then
-            return true
+        if output.status.success then
+            return output.stdout:match("^Yes")
         else
             display_error(job, output.stderr)
             return false
