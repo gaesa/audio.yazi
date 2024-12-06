@@ -1,72 +1,72 @@
 local M = {}
 
+local function display_error(job, error)
+    ya.preview_widgets(job, { ui.Text(ui.Line({ ui.Span(error) })):area(job.area):wrap(ui.Text.WRAP) })
+end
+
+local function has_cover(job)
+    local output, _ = Command("ffprobe")
+        :args({
+            "-v",
+            "error",
+            "-select_streams",
+            "v:0",
+            "-show_entries",
+            "stream=codec_type",
+            "-of",
+            "default=noprint_wrappers=1:nokey=1",
+        })
+        :arg(tostring(job.file.url))
+        :stdout(Command.PIPED)
+        :stderr(Command.PIPED)
+        :output()
+
+    if output ~= nil then
+        if output.status.success and output.stdout ~= "" then
+            return true
+        else
+            display_error(job, output.stderr)
+            return false
+        end
+    else
+        display_error(job, "Make sure `ffprobe` (part of the `ffmpeg` suite) is installed and in your PATH.")
+        return false
+    end
+end
+
+local function show_metadata(job)
+    local function get_metadata()
+        local child, _ = Command("mediainfo")
+            :arg("--")
+            :arg(tostring(job.file.url))
+            :stdout(Command.PIPED)
+            :stderr(Command.NULL)
+            :spawn()
+        local limit = job.area.h + job.skip
+        local i, metadata = 0, {}
+        if child ~= nil then
+            while i < limit do
+                local next, event = child:read_line()
+                if event == 0 then
+                    i = i + 1
+                    if i > job.skip then
+                        table.insert(metadata, next)
+                    end
+                else
+                    return metadata
+                end
+            end
+        end
+        return metadata
+    end
+
+    ya.preview_widgets(job, { ui.Text(get_metadata()):area(job.area):wrap(ui.Text.WRAP) })
+end
+
 function M:peek(job)
     local start, cache = os.clock(), ya.file_cache(job)
     if cache == nil then
         return
-    end
-
-    local function show_metadata()
-        local function get_metadata()
-            local child, _ = Command("mediainfo")
-                :arg("--")
-                :arg(tostring(job.file.url))
-                :stdout(Command.PIPED)
-                :stderr(Command.NULL)
-                :spawn()
-            local limit = job.area.h + job.skip
-            local i, metadata = 0, {}
-            if child ~= nil then
-                while i < limit do
-                    local next, event = child:read_line()
-                    if event == 0 then
-                        i = i + 1
-                        if i > job.skip then
-                            table.insert(metadata, next)
-                        end
-                    else
-                        return metadata
-                    end
-                end
-            end
-            return metadata
-        end
-
-        ya.preview_widgets(job, { ui.Text(get_metadata()):area(job.area):wrap(ui.Text.WRAP) })
-    end
-
-    local function display_error(error)
-        ya.preview_widgets(job, { ui.Text(ui.Line({ ui.Span(error) })):area(job.area):wrap(ui.Text.WRAP) })
-    end
-
-    local function has_cover()
-        local output, _ = Command("ffprobe")
-            :args({
-                "-v",
-                "error",
-                "-select_streams",
-                "v:0",
-                "-show_entries",
-                "stream=codec_type",
-                "-of",
-                "default=noprint_wrappers=1:nokey=1",
-            })
-            :arg(tostring(job.file.url))
-            :stdout(Command.PIPED)
-            :stderr(Command.PIPED)
-            :output()
-
-        if output ~= nil then
-            if output.status.success and output.stdout ~= "" then
-                return true
-            else
-                display_error(output.stderr)
-                return false
-            end
-        else
-            display_error("Make sure `ffprobe` (part of the `ffmpeg` suite) is installed and in your PATH.")
-            return false
-        end
     end
 
     local function show_cover()
@@ -77,10 +77,10 @@ function M:peek(job)
         end
     end
 
-    if has_cover() then
-        show_cover()
+    if has_cover(job) then
+        show_cover(self, job)
     else
-        show_metadata()
+        show_metadata(job)
     end
 end
 
