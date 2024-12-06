@@ -1,7 +1,7 @@
 local M = {}
 
-function M:peek()
-    local start, cache = os.clock(), ya.file_cache(self)
+function M:peek(job)
+    local start, cache = os.clock(), ya.file_cache(job)
     if cache == nil then
         return
     end
@@ -10,18 +10,18 @@ function M:peek()
         local function get_metadata()
             local child, _ = Command("mediainfo")
                 :arg("--")
-                :arg(tostring(self.file.url))
+                :arg(tostring(job.file.url))
                 :stdout(Command.PIPED)
                 :stderr(Command.NULL)
                 :spawn()
-            local limit = self.area.h + self.skip
+            local limit = job.area.h + job.skip
             local i, metadata = 0, {}
             if child ~= nil then
                 while i < limit do
                     local next, event = child:read_line()
                     if event == 0 then
                         i = i + 1
-                        if i > self.skip then
+                        if i > job.skip then
                             table.insert(metadata, next)
                         end
                     else
@@ -32,11 +32,11 @@ function M:peek()
             return metadata
         end
 
-        ya.preview_widgets(self, { ui.Text(get_metadata()):area(self.area):wrap(ui.Text.WRAP) })
+        ya.preview_widgets(job, { ui.Text(get_metadata()):area(job.area):wrap(ui.Text.WRAP) })
     end
 
     local function display_error(error)
-        ya.preview_widgets(self, { ui.Text(ui.Line({ ui.Span(error) })):area(self.area):wrap(ui.Text.WRAP) })
+        ya.preview_widgets(job, { ui.Text(ui.Line({ ui.Span(error) })):area(job.area):wrap(ui.Text.WRAP) })
     end
 
     local function has_cover()
@@ -51,7 +51,7 @@ function M:peek()
                 "-of",
                 "default=noprint_wrappers=1:nokey=1",
             })
-            :arg(tostring(self.file.url))
+            :arg(tostring(job.file.url))
             :stdout(Command.PIPED)
             :stderr(Command.PIPED)
             :output()
@@ -70,10 +70,10 @@ function M:peek()
     end
 
     local function show_cover()
-        if self:preload() == tonumber("01", 2) then
+        if self:preload(job) == tonumber("01", 2) then
             ya.sleep(math.max(0, PREVIEW.image_delay / 1000 + start - os.clock()))
-            ya.image_show(cache, self.area)
-            ya.preview_widgets(self, {})
+            ya.image_show(cache, job.area)
+            ya.preview_widgets(job, {})
         end
     end
 
@@ -84,18 +84,18 @@ function M:peek()
     end
 end
 
-function M:seek(units)
+function M:seek(job)
     local h = cx.active.current.hovered
-    if h and h.url == self.file.url then
+    if h and h.url == job.file.url then
         ya.manager_emit("peek", {
-            tostring(math.max(0, cx.active.preview.skip + units)),
-            only_if = tostring(self.file.url),
+            math.max(0, cx.active.preview.skip + job.units),
+            only_if = job.file.url,
         })
     end
 end
 
-function M:preload()
-    local cache = ya.file_cache(self)
+function M:preload(job)
+    local cache = ya.file_cache(job)
     if cache == nil then -- not allowd to be cached
         return tonumber("01", 2) -- don't continue, success
     end
@@ -125,7 +125,7 @@ function M:preload()
         "-v",
         "error",
         "-i",
-        tostring(self.file.url),
+        tostring(job.file.url),
         "-an",
         "-frames:v",
         "1",
