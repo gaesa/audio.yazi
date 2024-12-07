@@ -8,7 +8,7 @@ local function has_cover(job)
     -- Currently, no method has been found to make `ffprobe` faster than `mediainfo`
     local output, _ = Command("mediainfo")
         :args({
-            "--Output=General;%Cover%",
+            "--Inform=General;%Cover%",
             "--",
             tostring(job.file.url),
         })
