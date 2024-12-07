@@ -132,9 +132,7 @@ function M:preload(job)
         -- See also:
         -- https://trac.ffmpeg.org/wiki/Scaling
         -- https://superuser.com/questions/566998/how-can-i-fit-a-video-to-a-certain-size-but-dont-upscale-it-with-ffmpeg
-        "scale='-1:min("
-            .. tostring(PREVIEW.max_height)
-            .. ",ih)'",
+        ("scale=-1:'min(%d,ih)'"):format(PREVIEW.max_height),
         "-q:v",
         tostring(map_quality_to_qv(PREVIEW.image_quality)),
         "-f",
