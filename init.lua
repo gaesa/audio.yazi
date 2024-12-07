@@ -58,6 +58,24 @@ local function show_metadata(job)
     ya.preview_widgets(job, { ui.Text(get_metadata()):area(job.area):wrap(ui.Text.WRAP) })
 end
 
+local function make_exit_code(tbl)
+    local continue
+    if tbl.continue then
+        continue = 1
+    else
+        continue = 0
+    end
+
+    local success
+    if tbl.success then
+        success = 1
+    else
+        success = 0
+    end
+
+    return tonumber(tostring(continue) .. tostring(success), 2)
+end
+
 function M:peek(job)
     local start, cache = os.clock(), ya.file_cache(job)
     if cache == nil then
@@ -65,7 +83,7 @@ function M:peek(job)
     end
 
     local function show_cover()
-        if self:preload(job) == tonumber("01", 2) then
+        if self:preload(job) == make_exit_code({ continue = false, success = true }) then
             ya.sleep(math.max(0, PREVIEW.image_delay / 1000 + start - os.clock()))
             ya.image_show(cache, job.area)
             ya.preview_widgets(job, {})
@@ -92,11 +110,11 @@ end
 function M:preload(job)
     local cache = ya.file_cache(job)
     if cache == nil then -- not allowd to be cached
-        return tonumber("01", 2) -- don't continue, success
+        return make_exit_code({ continue = false, success = true })
     end
     local cha = select(1, fs.cha(cache))
     if cha ~= nil and cha.len > 1 then -- cache already exits
-        return tonumber("01", 2)
+        return make_exit_code({ continue = false, success = true })
     end
 
     -- Assumption: `num` is always non-negative
@@ -117,7 +135,7 @@ function M:preload(job)
     end
 
     if not has_cover(job) then
-        return tonumber("01", 2)
+        return make_exit_code({ continue = false, success = true })
     end
 
     local status, code = Command("ffmpeg"):args({
@@ -143,12 +161,12 @@ function M:preload(job)
 
     if status == nil then -- `ffmpeg` executable not found
         ya.err("`ffmpeg` command returns " .. tostring(code))
-        return tonumber("00", 2)
+        return make_exit_code({ continue = false, success = false })
     else
         if status.success then
-            return tonumber("01", 2)
+            return make_exit_code({ continue = false, success = true })
         else -- decoding/saving error
-            return tonumber("10", 2)
+            return make_exit_code({ continue = true, success = false })
         end
     end
 end
