@@ -3,7 +3,7 @@
 Preview audio cover and fallback to metadata on [Yazi](https://github.com/sxyazi/yazi).
 
 ![audio-cover](https://github.com/gaesa/audio.yazi/assets/71256557/c0eb01f8-c61f-4966-a34a-4d63639db800)
-![audio-metadata](https://github.com/gaesa/audio.yazi/assets/71256557/8850814c-1faf-43b2-8d9b-e586adc7178c)
+![audio-metadata](https://github.com/user-attachments/assets/e7b2c7e9-c48b-4a3b-b6b6-8aea703e616d)
 
 > [!NOTE]
 > The latest main branch of Yazi is required at the moment.
